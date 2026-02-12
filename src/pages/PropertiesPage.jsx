@@ -29,7 +29,10 @@ const PropertiesPage = () => {
       
       // Fetch all properties for client-side filtering (for now, until server-side filtering is needed)
       // Using a higher limit to get more properties
-      const { data } = await fetchProperties({ limit: 1000 });
+      const { data } = await fetchProperties({
+        limit: 500,
+        columns: 'id, title, description, price, type, zone, bedrooms, bathrooms, area, latitude, longitude, address'
+      });
       
       console.log(`🏠 [PropertiesPage] Loaded ${data.length} properties`);
       setProperties(data);
@@ -80,12 +83,12 @@ const PropertiesPage = () => {
         <title>Propiedades en Venta y Alquiler | Punta del Este | Rinova</title>
         <meta name="description" content="Catálogo completo de propiedades en Punta del Este. Casas, apartamentos y terrenos para inversión inmobiliaria con excelente ROI." />
         <meta name="keywords" content="propiedades Punta del Este, casas en venta, apartamentos alquiler, terrenos inversión" />
-        <link rel="canonical" href="https://rinova.com/propiedades" />
+        <link rel="canonical" href="https://rinova.com.ar/propiedades" />
 
         {/* Open Graph */}
         <meta property="og:title" content="Propiedades en Venta y Alquiler | Punta del Este | Rinova" />
         <meta property="og:description" content="Catálogo completo de propiedades en Punta del Este para inversión." />
-        <meta property="og:url" content="https://rinova.com/propiedades" />
+        <meta property="og:url" content="https://rinova.com.ar/propiedades" />
         <meta property="og:type" content="website" />
       </Helmet>
 

@@ -58,6 +58,22 @@ export const fetchProperties = async ({ page = 1, limit = 100, columns = '*' } =
   }
 };
 
+export const fetchPropertyById = async (id, columns = '*') => {
+  console.log(`📦 [Supabase] Fetching property by id: ${id}`);
+  const { data, error } = await supabase
+    .from('properties')
+    .select(columns)
+    .eq('id', id)
+    .single();
+
+  if (error) {
+    console.error('❌ [Supabase] Error fetching property:', error.message);
+    throw error;
+  }
+
+  return data;
+};
+
 export const saveProperty = async (property) => {
   console.log('💾 [Supabase] Saving new property:', property.title);
   try {

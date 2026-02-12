@@ -11,12 +11,12 @@ const ContactPage = () => {
         <title>Contacto | Rinova - Inmobiliaria Punta del Este</title>
         <meta name="description" content="Contacta con Rinova para consultas sobre propiedades en Punta del Este. Asesoramiento inmobiliario profesional." />
         <meta name="keywords" content="contacto inmobiliaria, asesor inmobiliario, consulta propiedades" />
-        <link rel="canonical" href="https://rinova.com/contacto" />
+        <link rel="canonical" href="https://rinova.com.ar/contacto" />
 
         {/* Open Graph */}
         <meta property="og:title" content="Contacto | Rinova - Inmobiliaria Punta del Este" />
         <meta property="og:description" content="Contacta con Rinova para consultas sobre propiedades en Punta del Este." />
-        <meta property="og:url" content="https://rinova.com/contacto" />
+        <meta property="og:url" content="https://rinova.com.ar/contacto" />
         <meta property="og:type" content="website" />
       </Helmet>
 

@@ -26,7 +26,7 @@ const HomePage = () => {
       const { data } = await fetchProperties({ 
         page: 1, 
         limit: 5,
-        columns: 'id, title, price, type, zone, description, images'
+        columns: 'id, title, price, type, zone, description'
       });
       
       if (data && data.length > 0) {
@@ -114,12 +114,12 @@ const HomePage = () => {
         <title>Propiedades en Punta del Este | Inversión Inmobiliaria | Rinova</title>
         <meta name="description" content="Descubre propiedades premium en Punta del Este. Inversión inmobiliaria con ROI garantizado. Alquiler y venta de propiedades de lujo." />
         <meta name="keywords" content="propiedades Punta del Este, inmobiliaria Punta del Este, inversión inmobiliaria, alquiler Punta del Este, venta de propiedades, ROI inmobiliario" />
-        <link rel="canonical" href="https://rinova.com/" />
+        <link rel="canonical" href="https://rinova.com.ar/" />
         
         <meta property="og:title" content="Propiedades en Punta del Este | Inversión Inmobiliaria | Rinova" />
         <meta property="og:description" content="Descubre propiedades premium en Punta del Este. Inversión inmobiliaria con ROI garantizado." />
         <meta property="og:image" content={heroImageDesktop} />
-        <meta property="og:url" content="https://rinova.com/" />
+        <meta property="og:url" content="https://rinova.com.ar/" />
         <meta property="og:type" content="website" />
 
         <script type="application/ld+json">

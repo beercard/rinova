@@ -10,12 +10,12 @@ const CalculatorPage = () => {
         <title>Calculadora ROI Inmobiliario | Punta del Este | Rinova</title>
         <meta name="description" content="Calcula el retorno de inversión (ROI) de propiedades en Punta del Este. Herramienta gratuita para análisis de inversión inmobiliaria." />
         <meta name="keywords" content="calculadora ROI, ROI inmobiliario, retorno inversión, análisis propiedades" />
-        <link rel="canonical" href="https://rinova.com/calculadora" />
+        <link rel="canonical" href="https://rinova.com.ar/calculadora" />
 
         {/* Open Graph */}
         <meta property="og:title" content="Calculadora ROI Inmobiliario | Punta del Este | Rinova" />
         <meta property="og:description" content="Calcula el retorno de inversión (ROI) de propiedades en Punta del Este." />
-        <meta property="og:url" content="https://rinova.com/calculadora" />
+        <meta property="og:url" content="https://rinova.com.ar/calculadora" />
         <meta property="og:type" content="website" />
       </Helmet>
 

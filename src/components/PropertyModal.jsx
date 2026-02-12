@@ -7,11 +7,14 @@ import { pushPropertyDetailsView, pushWhatsAppClick } from '@/lib/gtm';
 import { generatePropertySchema } from '@/lib/seo';
 import { supabase } from '@/lib/customSupabaseClient';
 import { useGoogleMaps } from '@/hooks/useGoogleMaps';
+import { fetchPropertyById } from '@/lib/supabase';
 
 const PropertyModal = ({ property, onClose }) => {
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [isLightboxOpen, setIsLightboxOpen] = useState(false);
   const [isSendingEmail, setIsSendingEmail] = useState(false);
+  const [propertyData, setPropertyData] = useState(property);
+  const [loadingProperty, setLoadingProperty] = useState(false);
   
   // Maps
   const { isLoaded, loadError } = useGoogleMaps();
@@ -30,17 +33,42 @@ const PropertyModal = ({ property, onClose }) => {
     mensaje: `Hola, estoy interesado en la propiedad: ${property.title}`
   });
 
+  const p = propertyData || property;
+
   useEffect(() => {
     // Track Property Details View
     pushPropertyDetailsView(property);
   }, [property]);
 
+  useEffect(() => {
+    setPropertyData(property);
+  }, [property]);
+
+  useEffect(() => {
+    const loadFullProperty = async () => {
+      if (!property?.id) return;
+      if (property?.images && property.images.length > 0) return;
+
+      setLoadingProperty(true);
+      try {
+        const full = await fetchPropertyById(property.id);
+        setPropertyData(full);
+      } catch (error) {
+        console.error('Failed to load full property:', error);
+      } finally {
+        setLoadingProperty(false);
+      }
+    };
+
+    loadFullProperty();
+  }, [property?.id]);
+
   // Initialize Map
   useEffect(() => {
-    if (isLoaded && mapRef.current && property.latitude && property.longitude) {
+    if (isLoaded && mapRef.current && p.latitude && p.longitude) {
       const location = { 
-        lat: parseFloat(property.latitude), 
-        lng: parseFloat(property.longitude) 
+        lat: parseFloat(p.latitude), 
+        lng: parseFloat(p.longitude) 
       };
 
       const map = new window.google.maps.Map(mapRef.current, {
@@ -53,10 +81,10 @@ const PropertyModal = ({ property, onClose }) => {
       new window.google.maps.Marker({
         position: location,
         map: map,
-        title: property.title
+        title: p.title
       });
     }
-  }, [isLoaded, property]);
+  }, [isLoaded, p.latitude, p.longitude, p.title]);
 
   const formatPrice = (price) => {
     return new Intl.NumberFormat('es-UY', {
@@ -67,14 +95,23 @@ const PropertyModal = ({ property, onClose }) => {
   };
 
   const handleWhatsApp = () => {
-    const message = `Hola! Estoy interesado en la propiedad: ${property.title} - ${formatPrice(property.price)}`;
+    const message = `Hola! Estoy interesado en la propiedad: ${p.title} - ${formatPrice(p.price)}`;
     const url = `https://wa.me/5491153413959?text=${encodeURIComponent(message)}`;
     
     // Track WhatsApp Click
-    pushWhatsAppClick('property_modal', property.id);
+    pushWhatsAppClick('property_modal', p.id);
     
     window.open(url, '_blank');
   };
+
+  useEffect(() => {
+    setContactForm(prev => ({
+      ...prev,
+      mensaje: prev.mensaje?.trim()
+        ? prev.mensaje
+        : `Hola, estoy interesado en la propiedad: ${p.title}`
+    }));
+  }, [p.title]);
 
   const handleEmailContact = async (e) => {
     e.preventDefault();
@@ -87,8 +124,8 @@ const PropertyModal = ({ property, onClose }) => {
           email: contactForm.email,
           phone: contactForm.telefono,
           message: contactForm.mensaje,
-          propertyTitle: property.title,
-          propertyId: property.id
+          propertyTitle: p.title,
+          propertyId: p.id
         }
       });
 
@@ -106,7 +143,7 @@ const PropertyModal = ({ property, onClose }) => {
         nombre: '',
         email: '',
         telefono: '',
-        mensaje: `Hola, estoy interesado en la propiedad: ${property.title}`
+        mensaje: `Hola, estoy interesado en la propiedad: ${p.title}`
       });
 
     } catch (error) {
@@ -122,7 +159,7 @@ const PropertyModal = ({ property, onClose }) => {
       });
 
       // Fallback to mailto
-      const mailtoLink = `mailto:ornella.vietagizzi@gmail.com,info@rinova.com.ar?subject=Consulta por ${encodeURIComponent(property.title)}&body=${encodeURIComponent(
+      const mailtoLink = `mailto:ornella.vietagizzi@gmail.com,info@rinova.com.ar?subject=Consulta por ${encodeURIComponent(p.title)}&body=${encodeURIComponent(
         `Nombre: ${contactForm.nombre}\nEmail: ${contactForm.email}\nTeléfono: ${contactForm.telefono}\n\nMensaje:\n${contactForm.mensaje}`
       )}`;
       
@@ -136,15 +173,17 @@ const PropertyModal = ({ property, onClose }) => {
 
   const nextImage = (e) => {
     e?.stopPropagation();
+    if (!p.images || p.images.length === 0) return;
     setCurrentImageIndex((prev) => 
-      prev === property.images.length - 1 ? 0 : prev + 1
+      prev === p.images.length - 1 ? 0 : prev + 1
     );
   };
 
   const prevImage = (e) => {
     e?.stopPropagation();
+    if (!p.images || p.images.length === 0) return;
     setCurrentImageIndex((prev) => 
-      prev === 0 ? property.images.length - 1 : prev - 1
+      prev === 0 ? p.images.length - 1 : prev - 1
     );
   };
 
@@ -156,8 +195,8 @@ const PropertyModal = ({ property, onClose }) => {
     }));
   };
 
-  const displayImage = property.images && property.images.length > 0 
-    ? property.images[currentImageIndex] 
+  const displayImage = p.images && p.images.length > 0 
+    ? p.images[currentImageIndex] 
     : 'https://via.placeholder.com/800x600?text=No+Image';
 
   return (
@@ -171,7 +210,7 @@ const PropertyModal = ({ property, onClose }) => {
       >
         <Helmet>
           <script type="application/ld+json">
-            {JSON.stringify(generatePropertySchema(property))}
+            {JSON.stringify(generatePropertySchema(p))}
           </script>
         </Helmet>
         <motion.div
@@ -183,7 +222,10 @@ const PropertyModal = ({ property, onClose }) => {
         >
           {/* Header */}
           <div className="sticky top-0 bg-white z-20 p-4 border-b border-gray-200 flex justify-between items-center">
-            <h2 className="text-2xl font-bold text-[#030083] truncate pr-4">{property.title}</h2>
+            <div className="flex items-center gap-3 min-w-0">
+              <h2 className="text-2xl font-bold text-[#030083] truncate pr-4">{p.title}</h2>
+              {loadingProperty && <Loader2 className="w-5 h-5 animate-spin text-[#030083]" />}
+            </div>
             <button
               onClick={onClose}
               className="p-2 hover:bg-gray-100 rounded-full transition-colors flex-shrink-0"
@@ -199,12 +241,12 @@ const PropertyModal = ({ property, onClose }) => {
               <div className="relative h-80 lg:h-[500px] bg-black group cursor-pointer" onClick={() => setIsLightboxOpen(true)}>
                 <img
                   src={displayImage}
-                  alt={property.title}
+                  alt={p.title}
                   className="w-full h-full object-cover"
                   onError={(e) => e.target.src = 'https://via.placeholder.com/800x600?text=Error+Loading+Image'}
                 />
                 
-                {property.images && property.images.length > 1 && (
+                {p.images && p.images.length > 1 && (
                   <>
                     <button
                       onClick={prevImage}
@@ -220,7 +262,7 @@ const PropertyModal = ({ property, onClose }) => {
                     </button>
                     
                     <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-2">
-                      {property.images.map((_, index) => (
+                      {p.images.map((_, index) => (
                         <button
                           key={index}
                           onClick={(e) => {
@@ -252,40 +294,40 @@ const PropertyModal = ({ property, onClose }) => {
                   <div>
                     <div className="flex items-center text-gray-600 mb-2">
                       <MapPin className="w-5 h-5 mr-2" />
-                      <span className="text-lg">{property.zone}</span>
+                      <span className="text-lg">{p.zone}</span>
                     </div>
-                    {property.address && (
+                    {p.address && (
                       <div className="text-sm text-gray-500 mb-2 pl-7">
-                        {property.address}
+                        {p.address}
                       </div>
                     )}
                     <div className="text-3xl font-bold text-[#030083]">
-                      {formatPrice(property.price)}
+                      {formatPrice(p.price)}
                     </div>
                   </div>
                   <span className={`px-4 py-2 rounded-full text-sm font-semibold ${
-                    property.type === 'venta' 
+                    p.type === 'venta' 
                       ? 'bg-[#030083] text-white' 
                       : 'bg-green-600 text-white'
                   }`}>
-                    {property.type === 'venta' ? 'Venta' : 'Alquiler'}
+                    {p.type === 'venta' ? 'Venta' : 'Alquiler'}
                   </span>
                 </div>
 
                 <div className="grid grid-cols-3 gap-4 mb-8">
                   <div className="text-center p-4 bg-gray-50 rounded-xl">
                     <Bed className="w-6 h-6 mx-auto mb-2 text-[#030083]" />
-                    <div className="font-bold">{property.bedrooms}</div>
+                    <div className="font-bold">{p.bedrooms}</div>
                     <div className="text-xs text-gray-500">Dorm.</div>
                   </div>
                   <div className="text-center p-4 bg-gray-50 rounded-xl">
                     <Bath className="w-6 h-6 mx-auto mb-2 text-[#030083]" />
-                    <div className="font-bold">{property.bathrooms}</div>
+                    <div className="font-bold">{p.bathrooms}</div>
                     <div className="text-xs text-gray-500">Baños</div>
                   </div>
                   <div className="text-center p-4 bg-gray-50 rounded-xl">
                     <Maximize className="w-6 h-6 mx-auto mb-2 text-[#030083]" />
-                    <div className="font-bold">{property.area}m²</div>
+                    <div className="font-bold">{p.area}m²</div>
                     <div className="text-xs text-gray-500">Total</div>
                   </div>
                 </div>
@@ -293,12 +335,12 @@ const PropertyModal = ({ property, onClose }) => {
                 <div className="mb-8">
                   <h4 className="text-xl font-bold text-[#030083] mb-3">Descripción</h4>
                   <p className="text-gray-700 leading-relaxed whitespace-pre-line">
-                    {property.description}
+                    {p.description}
                   </p>
                 </div>
 
                 {/* Map Section */}
-                {property.latitude && property.longitude && (
+                {p.latitude && p.longitude && (
                   <div className="mb-8">
                      <h4 className="text-xl font-bold text-[#030083] mb-3">Ubicación</h4>
                      <div className="w-full h-80 rounded-xl overflow-hidden border border-gray-200 relative">
@@ -422,11 +464,11 @@ const PropertyModal = ({ property, onClose }) => {
 
           <img
             src={displayImage}
-            alt={property.title}
+            alt={p.title}
             className="max-h-[90vh] max-w-[90vw] object-contain"
           />
 
-          {property.images && property.images.length > 1 && (
+          {p.images && p.images.length > 1 && (
             <>
               <button
                 onClick={prevImage}
