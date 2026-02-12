@@ -119,7 +119,18 @@ const Footer = () => {
         </div>
 
         <div className="border-t border-white/20 mt-8 pt-8 text-center text-gray-300">
-          <p>&copy; {currentYear} Rinova. Todos los derechos reservados.</p>
+          <p>
+            &copy; {currentYear} Rinova. Todos los derechos reservados. Desarrollado por{' '}
+            <a
+              href="https://vektra.digital/"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="font-medium text-gray-200 hover:text-white transition-colors"
+            >
+              Vektra
+            </a>
+            .
+          </p>
         </div>
       </div>
     </footer>
