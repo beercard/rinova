@@ -1,0 +1,57 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --primary-blue: #030083;
+  --secondary-blue: #0041CF;
+  --dark: #060805;
+  --white: #FFFFFF;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: 'Alexandria', sans-serif;
+  color: var(--dark);
+  background-color: var(--white);
+  overflow-x: hidden;
+}
+
+@layer components {
+  .glass-card {
+    @apply bg-white/80 backdrop-blur-sm rounded-xl shadow-lg hover:shadow-2xl transition-all duration-300;
+  }
+
+  .gradient-overlay {
+    @apply absolute inset-0 bg-gradient-to-b from-transparent via-black/30 to-black/70;
+  }
+
+  .btn-primary {
+    @apply bg-[#030083] text-white px-6 py-3 rounded-lg font-semibold hover:bg-[#0041CF] transition-all duration-300 hover:shadow-lg;
+  }
+
+  .btn-secondary {
+    @apply bg-white text-[#030083] px-6 py-3 rounded-lg font-semibold hover:bg-gray-100 transition-all duration-300 border-2 border-[#030083];
+  }
+
+  .section-padding {
+    @apply py-16 px-4 md:px-8 lg:px-16;
+  }
+
+  .card-hover {
+    @apply transform hover:-translate-y-2 transition-all duration-300;
+  }
+}
+
+input, textarea, select {
+  @apply text-gray-900;
+}
+
+input::placeholder, textarea::placeholder {
+  @apply text-gray-400;
+}
