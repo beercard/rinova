@@ -5,10 +5,12 @@ import { saveProperty, updateProperty } from '@/lib/supabase';
 import { useToast } from '@/components/ui/use-toast';
 import { cn } from '@/lib/utils';
 import { useGoogleMaps } from '@/hooks/useGoogleMaps';
+import { uploadPropertyImage } from '@/lib/storage';
 
 const PropertyForm = ({ property, onClose }) => {
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
+  const [uploadingCount, setUploadingCount] = useState(0);
   const [newImageUrl, setNewImageUrl] = useState('');
   const [isDragging, setIsDragging] = useState(false);
   const fileInputRef = useRef(null);
@@ -110,6 +112,16 @@ const PropertyForm = ({ property, onClose }) => {
     setLoading(true);
 
     try {
+      if (uploadingCount > 0) {
+        toast({
+          title: "Subiendo imágenes",
+          description: "Esperá a que terminen de subirse las imágenes antes de guardar.",
+          variant: "destructive"
+        });
+        setLoading(false);
+        return;
+      }
+
       if (formData.images.length === 0) {
         toast({
           title: "Imagen requerida",
@@ -176,9 +188,18 @@ const PropertyForm = ({ property, onClose }) => {
 
   const handleAddImageUrl = () => {
     if (newImageUrl.trim()) {
+      const candidate = newImageUrl.trim();
+      if (candidate.startsWith('data:image/')) {
+        toast({
+          title: "URL no válida",
+          description: "Pegaste una imagen en base64. Usá el upload o una URL pública.",
+          variant: "destructive"
+        });
+        return;
+      }
       setFormData(prev => ({
         ...prev,
-        images: [...prev.images, newImageUrl.trim()]
+        images: [...prev.images, candidate]
       }));
       setNewImageUrl('');
     }
@@ -205,22 +226,24 @@ const PropertyForm = ({ property, onClose }) => {
       return;
     }
 
-    const reader = new FileReader();
-    reader.onloadend = () => {
-      const base64String = reader.result;
-      setFormData(prev => ({
-        ...prev,
-        images: [...prev.images, base64String]
-      }));
-    };
-    reader.onerror = () => {
-      toast({
-        title: "Error de lectura",
-        description: "No se pudo leer el archivo de imagen",
-        variant: "destructive"
+    setUploadingCount((n) => n + 1);
+    uploadPropertyImage(file)
+      .then(({ publicUrl }) => {
+        setFormData(prev => ({
+          ...prev,
+          images: [...prev.images, publicUrl]
+        }));
+      })
+      .catch((error) => {
+        toast({
+          title: "Error al subir imagen",
+          description: error?.message || "No se pudo subir la imagen a Storage",
+          variant: "destructive"
+        });
+      })
+      .finally(() => {
+        setUploadingCount((n) => Math.max(0, n - 1));
       });
-    };
-    reader.readAsDataURL(file);
   };
 
   const handleFileUpload = (e) => {
@@ -577,13 +600,18 @@ const PropertyForm = ({ property, onClose }) => {
             <div className="flex gap-4 pt-4 border-t border-gray-100">
               <button
                 type="submit"
-                disabled={loading}
+                disabled={loading || uploadingCount > 0}
                 className="flex-1 bg-[#030083] text-white px-6 py-3 rounded-lg font-semibold hover:bg-[#0041CF] transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center shadow-md hover:shadow-lg"
               >
                 {loading ? (
                   <>
                     <Loader2 className="w-5 h-5 mr-2 animate-spin" />
                     Guardando...
+                  </>
+                ) : uploadingCount > 0 ? (
+                  <>
+                    <Loader2 className="w-5 h-5 mr-2 animate-spin" />
+                    Subiendo imágenes...
                   </>
                 ) : (
                   property ? 'Actualizar Propiedad' : 'Crear Propiedad'
