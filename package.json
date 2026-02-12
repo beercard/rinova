@@ -6,6 +6,7 @@
   "scripts": {
     "dev": "vite --host 127.0.0.1 --port 3000",
     "build": "(node tools/generate-llms.js || node -e \"process.exit(0)\") && vite build",
+    "start": "node server.mjs",
     "preview": "vite preview --host 127.0.0.1 --port 3000",
     "eslint": "eslint src",
     "lint": "eslint . --quiet"
