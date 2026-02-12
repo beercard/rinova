@@ -1,12 +1,10 @@
 import path from 'node:path';
 import react from '@vitejs/plugin-react';
-import { createLogger, defineConfig } from 'vite';
+import { createLogger, defineConfig, loadEnv } from 'vite';
 import inlineEditPlugin from './plugins/visual-editor/vite-plugin-react-inline-editor.js';
 import editModeDevPlugin from './plugins/visual-editor/vite-plugin-edit-mode.js';
 import iframeRouteRestorationPlugin from './plugins/vite-plugin-iframe-route-restoration.js';
 import selectionModePlugin from './plugins/selection-mode/vite-plugin-selection-mode.js';
-
-const isDev = process.env.NODE_ENV !== 'production';
 
 const configHorizonsViteErrorHandler = `
 const observer = new MutationObserver((mutations) => {
@@ -164,7 +162,7 @@ if (window.navigation && window.self !== window.top) {
 }
 `;
 
-const addTransformIndexHtml = {
+const createAddTransformIndexHtml = ({ isDev, env }) => ({
 	name: 'add-transform-index-html',
 	transformIndexHtml(html) {
 		const tags = [
@@ -200,13 +198,13 @@ const addTransformIndexHtml = {
 			},
 		];
 
-		if (!isDev && process.env.TEMPLATE_BANNER_SCRIPT_URL && process.env.TEMPLATE_REDIRECT_URL) {
+		if (!isDev && env.TEMPLATE_BANNER_SCRIPT_URL && env.TEMPLATE_REDIRECT_URL) {
 			tags.push(
 				{
 					tag: 'script',
 					attrs: {
-						src: process.env.TEMPLATE_BANNER_SCRIPT_URL,
-						'template-redirect-url': process.env.TEMPLATE_REDIRECT_URL,
+						src: env.TEMPLATE_BANNER_SCRIPT_URL,
+						'template-redirect-url': env.TEMPLATE_REDIRECT_URL,
 					},
 					injectTo: 'head',
 				}
@@ -218,7 +216,7 @@ const addTransformIndexHtml = {
 			tags,
 		};
 	},
-};
+});
 
 console.warn = () => {};
 
@@ -233,34 +231,51 @@ logger.error = (msg, options) => {
 	loggerError(msg, options);
 }
 
-export default defineConfig({
-	customLogger: logger,
-	plugins: [
-		...(isDev ? [inlineEditPlugin(), editModeDevPlugin(), iframeRouteRestorationPlugin(), selectionModePlugin()] : []),
-		react(),
-		addTransformIndexHtml
-	],
-	server: {
-		cors: true,
-		headers: {
-			'Cross-Origin-Embedder-Policy': 'credentialless',
+export default defineConfig(({ mode }) => {
+	const env = loadEnv(mode, process.cwd(), '');
+	const isDev = mode !== 'production';
+	const addTransformIndexHtml = createAddTransformIndexHtml({ isDev, env });
+
+	return {
+		customLogger: logger,
+		plugins: [
+			...(isDev ? [inlineEditPlugin(), editModeDevPlugin(), iframeRouteRestorationPlugin(), selectionModePlugin()] : []),
+			react(),
+			addTransformIndexHtml
+		],
+		server: {
+			cors: true,
+			headers: {
+				'Cross-Origin-Embedder-Policy': 'credentialless',
+			},
+			allowedHosts: true,
+			proxy: env.VITE_SUPABASE_URL
+				? {
+					'/supabase': {
+						target: env.VITE_SUPABASE_URL,
+						changeOrigin: true,
+						secure: true,
+						ws: true,
+						rewrite: (p) => p.replace(/^\/supabase/, ''),
+					},
+				}
+				: undefined,
 		},
-		allowedHosts: true,
-	},
-	resolve: {
-		extensions: ['.jsx', '.js', '.tsx', '.ts', '.json', ],
-		alias: {
-			'@': path.resolve(__dirname, './src'),
+		resolve: {
+			extensions: ['.jsx', '.js', '.tsx', '.ts', '.json', ],
+			alias: {
+				'@': path.resolve(__dirname, './src'),
+			},
 		},
-	},
-	build: {
-		rollupOptions: {
-			external: [
-				'@babel/parser',
-				'@babel/traverse',
-				'@babel/generator',
-				'@babel/types'
-			]
+		build: {
+			rollupOptions: {
+				external: [
+					'@babel/parser',
+					'@babel/traverse',
+					'@babel/generator',
+					'@babel/types'
+				]
+			}
 		}
-	}
+	};
 });
