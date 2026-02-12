@@ -5,7 +5,7 @@ import { motion } from 'framer-motion';
 import { Plus, Edit, Trash2, RefreshCw, ChevronLeft, ChevronRight } from 'lucide-react';
 import AdminLayout from '@/components/AdminLayout';
 import PropertyForm from '@/components/PropertyForm';
-import { fetchProperties, deleteProperty } from '@/lib/supabase';
+import { fetchProperties, fetchPropertyById, deleteProperty } from '@/lib/supabase';
 import { supabase } from '@/lib/customSupabaseClient';
 import { useToast } from '@/components/ui/use-toast';
 
@@ -75,10 +75,20 @@ const AdminProperties = () => {
     }
   };
 
-  const handleEdit = (property) => {
+  const handleEdit = async (property) => {
     console.log('✏️ [AdminProperties] Editing property:', property.id);
-    setEditingProperty(property);
-    setShowForm(true);
+    try {
+      const fullProperty = await fetchPropertyById(property.id);
+      setEditingProperty(fullProperty);
+      setShowForm(true);
+    } catch (error) {
+      console.error('❌ [AdminProperties] Error loading property for edit:', error);
+      toast({
+        title: "Error",
+        description: "No se pudo cargar la propiedad para editar. Intenta nuevamente.",
+        variant: "destructive"
+      });
+    }
   };
 
   const handleDelete = async (id) => {

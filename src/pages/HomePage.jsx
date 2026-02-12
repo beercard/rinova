@@ -26,7 +26,7 @@ const HomePage = () => {
       const { data } = await fetchProperties({ 
         page: 1, 
         limit: 5,
-        columns: 'id, title, price, type, zone, description'
+        columns: 'id, title, price, type, zone, description, images'
       });
       
       if (data && data.length > 0) {

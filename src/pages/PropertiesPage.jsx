@@ -31,7 +31,7 @@ const PropertiesPage = () => {
       // Using a higher limit to get more properties
       const { data } = await fetchProperties({
         limit: 500,
-        columns: 'id, title, description, price, type, zone, bedrooms, bathrooms, area, latitude, longitude, address'
+        columns: 'id, title, description, price, type, zone, bedrooms, bathrooms, area, latitude, longitude, address, images'
       });
       
       console.log(`🏠 [PropertiesPage] Loaded ${data.length} properties`);

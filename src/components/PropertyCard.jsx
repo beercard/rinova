@@ -35,8 +35,9 @@ const PropertyCard = ({ property, index, onSelect }) => {
   };
 
   // Safe image handling
-  const displayImage = property.images && property.images.length > 0 
-    ? property.images[0] 
+  const displayImage = Array.isArray(property.images)
+    ? (property.images.find((img) => typeof img === 'string' && img.length > 0 && !img.startsWith('data:image/')) ||
+      'https://via.placeholder.com/400x300?text=No+Image')
     : 'https://via.placeholder.com/400x300?text=No+Image';
 
   return (
